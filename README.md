@@ -1,4 +1,4 @@
-Spotify DJ
+DjYayo
 ==========
 
 Going to a party want your friends to choose the music ?
