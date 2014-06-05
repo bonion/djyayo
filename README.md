@@ -6,4 +6,4 @@ Spotify is a simple application, just plug it to your speaker and all your frien
 This application is still in developement.
 
 
-Documentation is available here : [http://jerome-quere.github.io/djyayo/index.html](http://jerome-quere.github.io/djyayo/index.html)
+Documentation is available here : [http://jerome-quere.github.io/djyayo](http://jerome-quere.github.io/djyayo)
