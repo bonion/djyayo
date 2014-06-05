@@ -22,26 +22,44 @@
 # THE SOFTWARE.
 ##
 
-class RoomAdminController
-	constructor: (@$scope, $routeParams, @locationManager, @room) ->
-		@room.enter($routeParams.room).catch () =>
-			@locationManager.goTo('/roomSelect');
-		@room.on 'change', @$scope, @onRoomChange
-		@onRoomChange()
-		@$scope.onNextTrackClick = @onNextTrackClick;
-		@$scope.onDeleteTrackClick = @onDeleteTrackClick;
+class MyArray
+	constructor: (@array) ->
+	filter: (pred) ->
+		i = 0;
+		toRemove = [];
+		while (i < @array.length)
+			if pred(@array[i]) then toRemove.unshift(i);
+			i++;
+		for i in toRemove
+			@array.splice(i, 1);
+		return this;
 
-	onRoomChange: () =>
-		@$scope.roomName = @room.getName();
-		@$scope.trackQueue = @room.getTrackQueue();
-		@$scope.currentTrack = @room.getCurrentTrack();
-		@$scope.havePlayer = @room.havePlayer();
+	find: (pred) ->
+		for o in @array
+			if pred(o) then return o;
+		return null;
 
-	onNextTrackClick: () =>
-		@room.nextTrack();
+	push_back: (o) ->
+		@array.push(o);
+		return this;
 
-	onDeleteTrackClick: (elem) =>
-		@room.deleteTrack(elem.track.uri);
+	push_front: (o) ->
+		@array.unshift(o);
+		return this;
 
+	foreach: (f) ->
+		for i in @array
+			f(i);
+		return this;
 
-RoomAdminController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']
+	pop_front: () -> @array.shift()
+	pop_back: () -> @array.pop();
+
+	front: () -> @array[0];
+	sort: (fn) -> @array.sort(fn);
+
+	empty: () -> @size() == 0;
+	get: () -> @array;
+	clone: () -> new MyArray(o for o in @array)
+	clear: () -> @array = [];
+	size: () -> @array.length;

@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,26 +22,41 @@
 # THE SOFTWARE.
 ##
 
-class LocationManager
-	constructor: (@$rootScope, @$location, @user) ->
-		@user.on('login', @$rootScope, @onUserLogin);
-		@user.on('logout', @$rootScope, @onUserLogout);
-		@$rootScope.$on '$locationChangeStart', (scope, next, current) =>
-			if (!@user.isLog() && next.indexOf("login") == -1)
-				@user.refresh().finally () =>
-					if (!@user.isLog()) then @goTo('/login')
+class GoogleServiceController
+	constructor: (@$rootScope, @$q, @config) ->
+		@googleLoaded = @$q.defer();
+		@loadGoogleSDK();
 
-	onUserLogin: () =>
-		if (@$location.path() == '/login')
-			@goTo('/roomSelect');
+	login: () =>
+		defer = @$q.defer();
+		@googleLoaded.promise.then () =>
+			params = {};
+			params.client_id = @config.get("google.clientId");
+			params.imediate = true;
+			params.scope = 'https://www.googleapis.com/auth/plus.me'
+			gapi.auth.authorize params, (authResponse) =>
+				@scopeApply () =>
+					defer.resolve(authResponse.access_token);
 
-	onUserLogout: () =>
-		@goTo('/login');
+		return (defer.promise)
 
 
-	scopeApply: (s, f) -> (params...) -> s.$apply(() -> f.apply(params))
+	scopeApply: (func) =>
+		if (@$rootScope.$$phase && @$rootScope.$$phase == '$digest')
+			func();
+		else
+			@$rootScope.$apply(func)
 
-	goTo: (path) =>
-		@$location.path(path)
+	loadGoogleSDK: () ->
+		jQuery () =>
+			window.googleAsyncInit = @onGoogleSDKLoaded
+			po = document.createElement('script');
+			po.type = 'text/javascript';
+			po.async = true;
+			po.src = 'https://apis.google.com/js/client:plusone.js?onload=googleAsyncInit';
+			s = document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(po, s);
 
-LocationManager.$inject = ['$scope', '$location', 'user']
+	onGoogleSDKLoaded: () =>
+		@scopeApply () =>
+			@googleLoaded.resolve(true);

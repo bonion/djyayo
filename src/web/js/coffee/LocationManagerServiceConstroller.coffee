@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,18 +22,15 @@
 # THE SOFTWARE.
 ##
 
-class RoomCreateController
-	constructor: (@$scope, @locationManager, @webService) ->
-		@$scope.roomName = "";
-		@$scope.error = false;
-		@$scope.createRoom = @onCreateRoom
+class LocationManagerServiceController
 
-	onCreateRoom: () =>
-		roomName = @$scope.roomName;
-		promise = @webService.query "room/#{roomName}/create"
-		promise.then (data) =>
-			@locationManager.goTo("/room/#{data.name}");
-		promise.catch (data) =>
-			@$scope.error = true
+	constructor: (@$rootScope, @$location, @user) ->
+		@user.on('login', @$rootScope, @onUserLogin);
+		@user.on('logout', @$rootScope, @onUserLogout);
+		@$rootScope.$on '$locationChangeStart', (scope, next, current) =>
+			if not @user.isLog() and next.indexOf("login") == -1
+				@user.refresh().finally () => if not @user.isLog() then @goTo('/login')
 
-RoomCreateController.$inject = ['$scope', 'locationManager', 'webService']
+	onUserLogin:	()	=> if (@$location.path() == '/login') then @goTo('/roomSelect');
+	onUserLogout:	()	=> @goTo('/login');
+	goTo:		(path)	=> @$location.path(path)

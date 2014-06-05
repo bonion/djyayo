@@ -22,25 +22,47 @@
 # THE SOFTWARE.
 ##
 
-class WebService
-	constructor: ($http, $q, @config)  ->
-		@q = $q
-		@http = $http
-		@access_token = null;
+class MyArray
+	constructor: (@array) ->
+	filter: (pred) ->
+		i = 0;
+		toRemove = [];
+		while (i < @array.length)
+			if pred(@array[i]) then toRemove.unshift(i);
+			i++;
+		for i in toRemove
+			@array.splice(i, 1);
+		return this;
 
-	_buildQueryString: (params) =>
-		tmp = [];
-		for key, value of params
-			tmp.push("#{key}=#{encodeURI(value)}");
-		if (tmp.length == 0) then return ''
-		return "?#{tmp.join('&')}";
+	find: (pred) ->
+		for o in @array
+			if pred(o) then return o;
+		return null;
 
-	setAccessToken: (@access_token) ->
-	query: (method, data) =>
-		if (!data?) then data = {};
-		if (@access_token?) then data.access_token = @access_token;
-		return @http.get("#{@config.get('webservice.url')}/#{method}#{@_buildQueryString(data)}", {cache:false}).then (httpRes) =>
-			if (httpRes.data.code == 200)
-				return httpRes.data.data
-			else
-				@q.reject httpRes.data.message
+	push_back: (o) ->
+		@array.push(o);
+		return this;
+
+	push_front: (o) ->
+		@array.unshift(o);
+		return this;
+
+	foreach: (f) ->
+		for i in @array
+			f(i);
+		return this;
+
+	pop_front: () -> @array.shift()
+	pop_back: () -> @array.pop();
+
+	front: () -> @array[0];
+	sort: (fn) -> @array.sort(fn);
+
+	empty: () -> @size() == 0;
+	get: () -> @array;
+	clone: () -> new MyArray(o for o in @array)
+	clear: () -> @array = [];
+	size: () -> @array.length;
+
+
+module.exports = MyArray;

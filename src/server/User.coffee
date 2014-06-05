@@ -25,7 +25,7 @@
 When = require('when')
 
 class User
-	constructor: (@id, @name, @imgUrl) ->
+	constructor: (@id, @name, @imgUrl, @token) ->
 
 	getId: () -> @id;
 	getData: () -> {id: @id, name: @name, imgUrl: @imgUrl};

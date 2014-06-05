@@ -22,17 +22,15 @@
 # THE SOFTWARE.
 ##
 
-class Loading
+Command = require('./Command.coffee');
+MyArray = require('./MyArray.coffee');
+
+class RoomClientManager
 	constructor: () ->
+		@clients = new MyArray([]);
 
-	start: () ->
-		NProgress.start();
+	addClient: (client) -> @clients.push_back(client);
+	delClient: (client) -> @clients.filter (c) -> c == client
+	change: () -> @clients.foreach (client) -> client.send(new Command('roomChanged'));
 
-	done: () ->
-		NProgress.done();
-
-	incr:() ->
-		NProgress.inc()
-
-	set: (v) ->
-		NProgress.set(v)
+module.exports = RoomClientManager

@@ -22,27 +22,28 @@
 # THE SOFTWARE.
 ##
 
-class RoomTrackQueueController
-
+class RoomHistoryController
 	constructor: (@$scope, $routeParams, @locationManager, @room) ->
-		@room.enter($routeParams.room).catch () =>
-			@locationManager.goTo('/roomSelect');
+		p = @room.enter($routeParams.room).then () =>
+			@onRoomChange();
+			@onRoomLoaded();
+		p.catch () => @locationManager.goTo('/roomSelect');
 
 		@room.on 'change', @$scope, @onRoomChange
-		@onRoomChange()
-
-		@$scope.onTrackClick = @onTrackClick
+		@$scope.onTrackClick = @onTrackClick;
 
 	onRoomChange: () =>
-		@$scope.roomName	= @room.getName();
-		@$scope.trackQueue	= @room.getTrackQueue();
-		@$scope.currentTrack	= @room.getCurrentTrack();
-		@$scope.havePlayer	= @room.havePlayer();
+		@$scope.roomName = @room.getName();
+		@$scope.havePlayer = @room.havePlayer();
+
+	onRoomLoaded: () =>
+		@$scope.history = @room.getHistory();
 
 	onTrackClick: (elem) =>
 		if (elem.haveMyVote)
 			@room.unvote(elem.track.uri)
 		else
 			@room.vote(elem.track.uri)
+		elem.haveMyVote = !elem.haveMyVote;
 
-RoomTrackQueueController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']
+RoomAdminTrackQueueController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']

@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,18 +22,23 @@
 # THE SOFTWARE.
 ##
 
-class WebSocketClient
-	constructor: ($rootScope, @config, @room) ->
-		@rootScope = $rootScope;
-		@socket = io.connect(@config.get('webservice.url'))
-		@socket.on('command', @onCommand);
-		@room.on('enter', @onEnterRoom);
+MyArray = require('./MyArray.coffee');
 
-	onCommand: (command) =>
-		actions = {};
-		actions['roomChanged'] = @onRoomChange;
-		if (actions[command.name]?)
-			actions[command.name]()
+class RoomHistoryManager
+	constructor: () ->
+		@history = new MyArray([])
 
-	onRoomChange: () => @rootScope.$apply(() => @room.refreshTrackQueue());
-	onEnterRoom: () => @socket.emit('command', {name: 'changeRoom', args:{room: @room.name}});
+	addTrack: (track) ->
+		@history.push_front({track: track, date: new Date()});
+		while (@history.size() > 100)
+			@history.pop_back();
+
+	getData: () ->
+		data = [];
+		@history.foreach (t) ->
+			info = t.track.getData();
+			info.date = t.date.toJSON();
+			data.push(info);
+		return data;
+
+module.exports = RoomHistoryManager

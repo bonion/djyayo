@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,34 +22,8 @@
 # THE SOFTWARE.
 ##
 
-
-class OnVisibleController
-	constructor: (@$scope, @$element, @$attrs) ->
-		@bind()
-		@$element.on('$destroy', () -> @unbind);
-		@refresh()
-
-	bind: () =>
-		$(window).scroll(@onNeedToRefresh).resize(@onNeedToRefresh)
-
-	unbind: () =>
-		$(window).unbind("scroll", @onNeedToRefresh).unbind("resize", @onNeedToRefresh);
-
-	isVisible: () ->
-		docViewTop = $(window).scrollTop();
-		docViewBottom = docViewTop + $(window).height();
-		elemTop = @$element.offset().top;
-		elemBottom = elemTop + @$element.height();
-		return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
-
-	onNeedToRefresh: () =>
-		@$scope.$apply () =>
-			@refresh()
-
-	refresh: () ->
-		if (@isVisible())
-			@$scope.$eval(@$attrs.onVisible)
-			@unbind()
-
-
-OnVisibleController.$inject = ['$scope', '$element', '$attrs']
+class LoadingServiceController
+	start:	()	-> NProgress.start();
+	done:	()	-> NProgress.done();
+	incr:	()	-> NProgress.inc()
+	set:	(v)	-> NProgress.set(v)

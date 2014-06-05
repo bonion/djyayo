@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -25,26 +25,29 @@
 
 app = angular.module('app', ['ngRoute', 'ngCookies', 'ui.bootstrap'])
 
-app.config ['$routeProvider', ($routeProvider) ->
+app.config ['$locationProvider', '$routeProvider', ($locationProvider, $routeProvider) ->
 	$routeProvider.when('/login', {templateUrl:"./pages/login.html", controller: LoginController})
 	$routeProvider.when('/roomSelect', {templateUrl:"./pages/roomSelect.html", controller: RoomSelectController})
 	$routeProvider.when('/roomCreate', {templateUrl:"./pages/roomCreate.html", controller: RoomCreateController})
 	$routeProvider.when('/room/:room', {templateUrl:"./pages/roomTrackQueue.html", controller: RoomTrackQueueController})
+	$routeProvider.when('/room/:room/history', {templateUrl:"./pages/roomHistory.html", controller: RoomHistoryController})
 	$routeProvider.when('/room/:room/search', {templateUrl:"./pages/roomSearch.html", controller: RoomSearchController})
-	$routeProvider.when('/room/:room/admin', {templateUrl:"./pages/roomAdmin.html", controller: RoomAdminController})
+	$routeProvider.when('/room/:room/admin/trackQueue', {templateUrl:"./pages/roomAdminTrackQueue.html", controller: RoomAdminTrackQueueController})
+	$routeProvider.when('/room/:room/admin/users', {templateUrl:"./pages/roomAdminUsers.html", controller: RoomAdminUsersController})
 	$routeProvider.otherwise({redirectTo: '/roomSelect'});
+	$locationProvider.html5Mode(true);
 ]
 
-app.factory 'config', () -> new Config()
-app.factory 'loading', () -> new Loading()
-app.factory 'webService', ['$http', '$q', 'config', ($http, $q, config) -> new WebService($http, $q, config)]
-app.factory 'user', ['webService', '$location', '$cookies', (webService, $location, $cookies) -> new User(webService, $location, $cookies)]
-app.factory 'room', ['webService', 'user', (webService, user) -> new Room(webService, user)]
-app.factory 'locationManager', ['$rootScope', '$location', 'user', ($rootScope, $location, user) -> new LocationManager($rootScope, $location, user)]
-app.factory 'facebook', ['$rootScope', '$q', 'config', ($rootScope, $q, config) -> new Facebook($rootScope, $q, config)]
-app.factory 'google', ['$rootScope', '$q', 'config', ($rootScope, $q, config) -> new Google($rootScope, $q, config)]
-app.factory 'webSocketClient', ['$rootScope', 'config', 'room', ($rootScope, config, room) -> new WebSocketClient($rootScope, config, room)]
+app.factory 'config', () -> new ConfigServiceController()
+app.factory 'loading', () -> new LoadingServiceController()
+app.factory 'webService', ['$http', '$q', 'config', ($http, $q, config) -> new WebServiceServiceController($http, $q, config)]
+app.factory 'user', ['webService', '$location', '$cookies', (webService, $location, $cookies) -> new UserServiceController(webService, $location, $cookies)]
+app.factory 'room', ['webService', 'user', (webService, user) -> new RoomServiceController(webService, user)]
+app.factory 'locationManager', ['$rootScope', '$location', 'user', ($rootScope, $location, user) -> new LocationManagerServiceController($rootScope, $location, user)]
+app.factory 'facebook', ['$rootScope', '$q', 'config', ($rootScope, $q, config) -> new FacebookServiceController($rootScope, $q, config)]
+app.factory 'google', ['$rootScope', '$q', 'config', ($rootScope, $q, config) -> new GoogleServiceController($rootScope, $q, config)]
+app.factory 'webSocketClient', ['$rootScope', 'config', 'room', ($rootScope, config, room) -> new WebSocketClientServiceController($rootScope, config, room)]
 
-app.directive 'onVisible', () -> { controller: OnVisibleController}
+app.directive 'onVisible', () -> OnVisibleDirectiveController.getConfig()
 
 app.run ['webSocketClient', 'locationManager', (w, r) -> ]

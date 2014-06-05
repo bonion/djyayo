@@ -1,5 +1,5 @@
 ##
-# The MIT License (MIT)
+#The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,27 +22,23 @@
 # THE SOFTWARE.
 ##
 
-class RoomTrackQueueController
+MyArray = require('./MyArray.coffee');
 
-	constructor: (@$scope, $routeParams, @locationManager, @room) ->
-		@room.enter($routeParams.room).catch () =>
-			@locationManager.goTo('/roomSelect');
+class RoomUserManager
+	constructor: () ->
+		@users = new MyArray([])
+		@admins = new MyArray([])
 
-		@room.on 'change', @$scope, @onRoomChange
-		@onRoomChange()
+	addUser: (user) ->
+		if not (@users.find (u) -> u.getId() == user.getId())
+			@users.push_back(user)
 
-		@$scope.onTrackClick = @onTrackClick
+	getUsers: () -> @users.get()
 
-	onRoomChange: () =>
-		@$scope.roomName	= @room.getName();
-		@$scope.trackQueue	= @room.getTrackQueue();
-		@$scope.currentTrack	= @room.getCurrentTrack();
-		@$scope.havePlayer	= @room.havePlayer();
+	addAdmin: (user) -> if not @isAdmin(user) then @admins.push_back(user)
+	delAdmin: (user) -> @admins.filter (u) -> u.getId() == user.getId()
+	isAdmin : (user) ->  @admins.find((u) -> user.getId() == u.getId()) != null
 
-	onTrackClick: (elem) =>
-		if (elem.haveMyVote)
-			@room.unvote(elem.track.uri)
-		else
-			@room.vote(elem.track.uri)
 
-RoomTrackQueueController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']
+
+module.exports = RoomUserManager;

@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,38 +22,32 @@
 # THE SOFTWARE.
 ##
 
-class Config
 
-	constructor: () ->
-		proto = window.location.protocol;
-		host = window.location.hostname;
-		port = if (location.port) then ":#{location.port}" else "";
-		@config = {}
-		@config['website'] = {url:"#{proto}//#{host}#{port}"}
-		@config['webservice'] = {url: "#{proto}//#{host}#{port}"}
-		@config['facebook'] = {appId: '114968378707310'}
-		@config['google'] = {clientId: "452000358943.apps.googleusercontent.com"}
-		@config['static'] = {}
+class OnVisibleDirectiveController
+	@getConfig: () -> {controller: OnVisibleDirectiveController}
 
-		@hostConfs = {};
-		@hostConfs['archlinux'] = @loadLocalhostConf;
-		@hostConfs['dj.yayo.fr'] = @loadProdConf;
-		if @hostConfs[host]? then @hostConfs[host]();
+	constructor: (@$scope, @$element, @$attrs) ->
+		@bind()
+		@refresh()
+		@$element.on('$destroy', @unbind)
 
-	loadLocalhostConf: () =>
-		@config['website']['url'] = 'http://archlinux:8000'
-		@config['webservice']['url'] = 'http://archlinux:4545'
+	bind:	() => $(window).scroll(@onNeedToRefresh).resize(@onNeedToRefresh)
+	unbind: () => $(window).unbind("scroll", @onNeedToRefresh).unbind("resize", @onNeedToRefresh)
 
-	loadProdConf: () =>
-		@config['website']['url'] = 'http://dj.yayo.fr'
-		@config['webservice']['url'] = 'http://dj.yayo.fr:4545'
+	isVisible: () ->
+		window = $(window)
+		docViewTop = window.scrollTop()
+		docViewBottom = docViewTop + window.height()
+		elemTop = @$element.offset().top
+		elemBottom = elemTop + @$element.height()
+		return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop))
 
-	get: (key) =>
-		parts = key.split('.');
-		obj = @config;
-		for part in parts
-			if !obj[part]?
-				obj = null
-				break;
-			obj = obj[part]
-		return obj
+	onNeedToRefresh: () => @$scope.$apply () => @refresh()
+
+	refresh: () ->
+		if @isVisible()
+			@$scope.$eval(@$attrs.onVisible)
+			@unbind()
+
+
+OnVisibleDirectiveController.$inject = ['$scope', '$element', '$attrs']

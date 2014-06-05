@@ -22,27 +22,20 @@
 # THE SOFTWARE.
 ##
 
-class RoomTrackQueueController
+class WebServiceServiceController
+	constructor: (@$http, @$q, @config)  ->
+		@access_token = null;
 
-	constructor: (@$scope, $routeParams, @locationManager, @room) ->
-		@room.enter($routeParams.room).catch () =>
-			@locationManager.goTo('/roomSelect');
+	_buildQueryString: (params) =>
+		tmp = [];
+		for key, value of params
+			tmp.push("#{key}=#{encodeURI(value)}");
+		return if (tmp.length != 0) then "?#{tmp.join('&')}" else ''
 
-		@room.on 'change', @$scope, @onRoomChange
-		@onRoomChange()
-
-		@$scope.onTrackClick = @onTrackClick
-
-	onRoomChange: () =>
-		@$scope.roomName	= @room.getName();
-		@$scope.trackQueue	= @room.getTrackQueue();
-		@$scope.currentTrack	= @room.getCurrentTrack();
-		@$scope.havePlayer	= @room.havePlayer();
-
-	onTrackClick: (elem) =>
-		if (elem.haveMyVote)
-			@room.unvote(elem.track.uri)
-		else
-			@room.vote(elem.track.uri)
-
-RoomTrackQueueController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']
+	setAccessToken: (@access_token) ->
+	query: (method, data) =>
+		if (!data?) then data = {};
+		if (@access_token?) then data.access_token = @access_token;
+		return @$http.get("#{@config.get('webservice.url')}/#{method}#{@_buildQueryString(data)}", {cache:false}).then (httpRes) =>
+			if (httpRes.data.code != 200) then throw httpRes.data.message
+			return httpRes.data.data

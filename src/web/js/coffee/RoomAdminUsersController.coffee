@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,17 +22,34 @@
 # THE SOFTWARE.
 ##
 
-class CacheManager
-	@initCache: () -> if !@cache? then @cache = {}
+class RoomAdminUsersController
+	constructor: (@$scope, $routeParams, locationManager, @room, @user) ->
+		@room.enter($routeParams.room).catch () =>
+			locationManager.goTo('/roomSelect');
 
-	@get : (key, loader) ->
-		@initCache()
-		if @cache[key]? then return @cache[key];
-		@cache[key] = jQuery.Deferred()
-		promise = loader()
-		promise.then (data) =>
-			@cache[key].resolve(data);
-		promise.fail (error) =>
-			@cache[key].reject(error);
-			@cache[key] = null;
-		return @cache[key].promise();
+		@room.on 'change', @$scope, @onRoomChange
+		@onRoomChange()
+
+		@clearScope();
+		@$scope.addAdmin = @addAdmin;
+		@$scope.delAdmin = @delAdmin;
+
+	clearScope:	() ->
+		@$scope.admins = []
+		@$scope.users = []
+
+	onRoomChange:	() =>
+		p = @room.getUsers().then (data) =>
+			@clearScope();
+			for user in data
+				user.canRevoke = user.id != @user.getId()
+				if (user.isAdmin)
+					@$scope.admins.push(user);
+				else
+					@$scope.users.push(user);
+		p.catch () => @clearScope();
+
+	addAdmin: (user) => @room.addAdmin(user.id).then @buildScope;
+	delAdmin: (user) => @room.delAdmin(user.id).then @buildScope;
+
+RoomAdminUsersController.$inject = ['$scope', '$routeParams', 'locationManager', 'room', 'user'];

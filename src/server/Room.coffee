@@ -1,5 +1,5 @@
 ##
-#The MIT License (MIT)
+# The MIT License (MIT)
 #
 # Copyright (c) 2013 Jerome Quere <contact@jeromequere.com>
 #
@@ -22,99 +22,77 @@
 # THE SOFTWARE.
 ##
 
-Command = require('./Command.coffee');
 TrackQueue = require('./TrackQueue.coffee');
+EventEmitter = require("events").EventEmitter
+RoomPlayerManager = require('./RoomPlayerManager.coffee');
+RoomUserManager = require('./RoomUserManager.coffee');
+RoomClientManager = require('./RoomClientManager.coffee');
+RoomHistoryManager = require('./RoomHistoryManager.coffee');
 
 class Room
 	constructor: (@name) ->
-		@players = []
+		@playerManager = new RoomPlayerManager();
+		@playerManager.on('endOfTrack', @onEndOfTrack);
+		@playerManager.on('change', @onPlayerChange);
+
 		@trackQueue = new TrackQueue(this);
+		@trackQueue.on('change', @onTrackQueueChange);
+
+		@userManager = new RoomUserManager();
+		@clientManager = new RoomClientManager
 		@currentTrack = null;
-		@clients = [];
-		@admins = [];
 
-	addPlayer: (player) ->
-		@players.push(player);
-		if (@players.length == 1)
-			@players[0].on('endOfTrack', @onEndOfTrack);
-			@playNextTrack()
-		player.on('disconnect', () => @onPlayerDisconnect(player));
-		@changed();
+		@historyManager = new RoomHistoryManager();
 
+	# PLAYER MANAGER HANDLERS
+	onEndOfTrack:	()	=>	@playNextTrack()
+	onPlayerChange: ()	=>	@change()
 
-	addClient: (client) ->
-		@clients.push(client);
+	# TRACKQUEUE HANDLER
+	onTrackQueueChange: ()	=>
+		if @currentTrack == null then @playNextTrack();
+		@change();
 
-	delClient: (client) ->
-		if ((idx == @client.indexOf(client)) != -1)
-			@players.splice(idx, 1);
-
-	onPlayerDisconnect: (player) ->
-		idx = @players.indexOf(player);
-		if idx == -1 then return
-		@players.splice(idx, 1);
-		if (idx == 0 and @players.length)
-			@players[0].on('endOfTrack', @onEndOfTrack);
-		if (@players.length == 0)
-			@currentTrack = null;
+	# PLAYER RELATED ACTIONS
+	havePlayer:	()	->	@playerManager.havePlayer()
+	addPlayer:	(player) ->	@playerManager.addPlayer(player)
+	playNextTrack:	()	->
+		@currentTrack = null
+		if @playerManager.havePlayer() and not @trackQueue.empty()
+			@currentTrack = @trackQueue.pop()
+			@historyManager.addTrack(@currentTrack);
+			@playerManager.play(@currentTrack)
 		else
-			@playNextTrack()
-		@changed();
+			@playerManager.stop();
+		@change()
+	search: (query) -> @playerManager.search(query);
 
-	onEndOfTrack: () =>
-		@playNextTrack()
+	# TRACK QUEUE RELATED ACTIONS
+	vote: (userId, trackUri) -> @playerManager.lookup(trackUri).then (track) => @trackQueue.vote(userId, track);
+	unvote: (userId, uri) -> @trackQueue.unvote(userId, uri)
+	deleteTrack: (uri) -> @trackQueue.remove(uri);
 
-	playNextTrack: () ->
-		@currentTrack = null;
-		if (!@trackQueue.empty())
-			@currentTrack = @trackQueue.pop();
-			p.play(@currentTrack.getUri()) for p in @players;
-		else
-			p.stop() for p in @players;
-		@changed();
+	# USERS RELATED ACTIONS
+	addUser:	(user)	->	@userManager.addUser(user)
+	getUsers:	(user)	->	@userManager.getUsers()
+	addAdmin:	(user)	->	@userManager.addAdmin(user)
+	delAdmin:	(user)	->	@userManager.delAdmin(user)
+	isAdmin:	(user)	->	@userManager.isAdmin(user)
 
-	vote: (userId, trackUri) ->
-		if (!@players.length)
-			throw "No player connected"
-		@players[0].lookup(trackUri).then (track) =>
-			@trackQueue.vote(userId, track);
-			if (@currentTrack == null and @players.length != 0)
-				@playNextTrack();
-			@changed();
+	# CLIENT RELATED ACTIONS
+	addClient:	(client) ->	@clientManager.addClient(client)
+	delClient:	(client) ->	@clientManager.delClient(client)
+	change:		()	=>	@clientManager.change()
 
-	unvote: (userId, uri) ->
-		@trackQueue.unvote(userId, uri)
-		@changed();
-
-	search: (query) =>
-		if (!@players.length)
-			throw "No player connected"
-		@players[0].search(query).then (data) =>
-			return data;
-
-	addAdmin: (userId) ->
-		if @admins.indexOf(userId) == -1
-			@admins.push(userId);
-			@changed();
-
-	isAdmin: (userId) ->
-		return @admins.indexOf(userId) != -1;
-
-	deleteTrack: (uri) ->
-		@trackQueue.remove(uri);
-		@changed();
-
-	changed: () =>
-		for client in @clients
-			client.send(new Command('roomChanged'));
-
+	# DATA GETTERS
 	getData: () ->
 		data = {}
 		data.name = @name;
 		if (@currentTrack?) then data.currentTrack = @currentTrack.getData();
-		data.players = for p in @players
-			{id: p.getId()}
+		data.players = @playerManager.getData()
 		data.queue = @trackQueue.getData()
 		return data;
+
+	getHistoryData: () -> @historyManager.getData();
 
 module.exports = Room

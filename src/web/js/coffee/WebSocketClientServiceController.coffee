@@ -22,27 +22,16 @@
 # THE SOFTWARE.
 ##
 
-class RoomTrackQueueController
+class WebSocketClientServiceController
+	constructor: (@$rootScope, @config, @room) ->
+		@socket = io.connect(@config.get('webservice.url'))
+		@socket.on('command', @onCommand);
+		@room.on('enter', @onEnterRoom);
 
-	constructor: (@$scope, $routeParams, @locationManager, @room) ->
-		@room.enter($routeParams.room).catch () =>
-			@locationManager.goTo('/roomSelect');
+	onCommand: (command) =>
+		actions = {};
+		actions['roomChanged'] = @onRoomChange;
+		if (actions[command.name]?) then actions[command.name]()
 
-		@room.on 'change', @$scope, @onRoomChange
-		@onRoomChange()
-
-		@$scope.onTrackClick = @onTrackClick
-
-	onRoomChange: () =>
-		@$scope.roomName	= @room.getName();
-		@$scope.trackQueue	= @room.getTrackQueue();
-		@$scope.currentTrack	= @room.getCurrentTrack();
-		@$scope.havePlayer	= @room.havePlayer();
-
-	onTrackClick: (elem) =>
-		if (elem.haveMyVote)
-			@room.unvote(elem.track.uri)
-		else
-			@room.vote(elem.track.uri)
-
-RoomTrackQueueController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']
+	onRoomChange: () => @$rootScope.$apply () => @room.refreshTrackQueue();
+	onEnterRoom: () => @socket.emit('command', {name: 'changeRoom', args:{room: @room.getName()}});

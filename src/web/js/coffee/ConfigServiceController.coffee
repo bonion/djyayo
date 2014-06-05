@@ -22,27 +22,40 @@
 # THE SOFTWARE.
 ##
 
-class RoomTrackQueueController
 
-	constructor: (@$scope, $routeParams, @locationManager, @room) ->
-		@room.enter($routeParams.room).catch () =>
-			@locationManager.goTo('/roomSelect');
 
-		@room.on 'change', @$scope, @onRoomChange
-		@onRoomChange()
+class ConfigServiceController
 
-		@$scope.onTrackClick = @onTrackClick
+	constructor: () ->
+		proto = window.location.protocol;
+		host = window.location.hostname;
+		port = if (location.port) then ":#{location.port}" else "";
+		@config = {}
+		@config['website'] = {url:"#{proto}//#{host}#{port}"}
+		@config['webservice'] = {url: "#{proto}//#{host}#{port}"}
+		@config['facebook'] = {appId: '114968378707310'}
+		@config['google'] = {clientId: "452000358943.apps.googleusercontent.com"}
+		@config['static'] = {}
 
-	onRoomChange: () =>
-		@$scope.roomName	= @room.getName();
-		@$scope.trackQueue	= @room.getTrackQueue();
-		@$scope.currentTrack	= @room.getCurrentTrack();
-		@$scope.havePlayer	= @room.havePlayer();
+		@hostConfs = {};
+		@hostConfs['archlinux'] = @loadLocalhostConf;
+		@hostConfs['dj.yayo.fr'] = @loadProdConf;
+		if @hostConfs[host]? then @hostConfs[host]();
 
-	onTrackClick: (elem) =>
-		if (elem.haveMyVote)
-			@room.unvote(elem.track.uri)
-		else
-			@room.vote(elem.track.uri)
+	loadLocalhostConf: () =>
+		@config['website']['url'] = 'http://archlinux:8000'
+		@config['webservice']['url'] = 'http://archlinux:4545'
 
-RoomTrackQueueController.$inject = ['$scope', '$routeParams', 'locationManager', 'room']
+	loadProdConf: () =>
+		@config['website']['url'] = 'http://dj.yayo.fr'
+		@config['webservice']['url'] = 'http://dj.yayo.fr:4545'
+
+	get: (key) =>
+		parts = key.split('.');
+		obj = @config;
+		for part in parts
+			if !obj[part]?
+				obj = null
+				break;
+			obj = obj[part]
+		return obj
