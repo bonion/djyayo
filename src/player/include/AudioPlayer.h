@@ -37,6 +37,8 @@ namespace SpDj
 {
     class AudioPlayer : public EventEmitter
     {
+        const static size_t minimumBufferSize;
+
 	typedef int8_t Byte;
 
     public:
