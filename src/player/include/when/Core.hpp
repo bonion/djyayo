@@ -25,7 +25,7 @@
 #ifndef _WHEN_CORE_HPP_
 #define _WHEN_CORE_HPP_
 
-#include <exception>
+#include <stdexcept>
 
 namespace When
 {

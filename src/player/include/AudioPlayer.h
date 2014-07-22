@@ -25,6 +25,7 @@
 #ifndef _SPDJ_AUDIOPLAYER_H_
 #define _SPDJ_AUDIOPLAYER_H_
 
+#include <ctime>
 #include <mutex>
 #include <portaudio.h>
 

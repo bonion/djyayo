@@ -65,7 +65,7 @@ namespace SpDj
     void Store<Key, Value>::_watchTimeout() {
 	if (_timeout != 0) {
 	    _timeoutEvent = IOService::addTimer(_timeout, [this] () {
-		_onTimeout();
+		this->_onTimeout();
 	    });
 	}
     }
