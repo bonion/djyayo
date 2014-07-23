@@ -7,3 +7,11 @@ This application is still in developement.
 
 
 Documentation is available here : [http://jerome-quere.github.io/djyayo](http://jerome-quere.github.io/djyayo)
+
+
+Contributors
+------------
+
+Here is a list of people that contributed to the project:
+
+vaur: [https://github.com/Vaur/](https://github.com/Vaur/)
