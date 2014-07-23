@@ -56,8 +56,6 @@ struct JsonValue
 	JsonValue(JsonTag tag, void *p)
 	{
 		uint64_t x = (uint64_t)p;
-		assert((int)tag <= JSON_VALUE_TAG_MASK);
-		assert(x <= JSON_VALUE_PAYLOAD_MASK);
 		data.i = JSON_VALUE_NAN_MASK | ((uint64_t)tag << JSON_VALUE_TAG_SHIFT) | x;
 	}
 

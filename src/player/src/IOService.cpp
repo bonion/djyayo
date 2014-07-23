@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+#include <stdexcept>
+
 #include <QCoreApplication>
 #include <QMetaType>
 #include <QThread>

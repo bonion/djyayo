@@ -23,6 +23,7 @@
  */
 
 #include <list>
+#include <stdexcept>
 
 #include "IOService.h"
 
