@@ -7,7 +7,7 @@ This endpoint get information about a specific room like :
 - **admin** : A boolean that indicate if the current user is a room admin or not. You must send a valid access_token or the bolean will alway be false.
 
 ### Parameters ###
-* **:roomName** *(required)* : The name of the room you want info about.
+* **:roomName** *(required)* : The name of the room you want to retrieve infos from.
 
 ### Response ###
 ```json
