@@ -14,4 +14,4 @@ Contributors
 
 Here is a list of people that contributed to the project:
 
-vaur: [https://github.com/Vaur/](https://github.com/Vaur/)
++ Vaur: [https://github.com/Vaur/](https://github.com/Vaur/)
