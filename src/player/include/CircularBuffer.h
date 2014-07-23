@@ -33,26 +33,28 @@ namespace SpDj
     class CircularBuffer
     {
     public:
-	CircularBuffer();
+	CircularBuffer(size_t size);
 	~CircularBuffer();
 
 	template <typename I>
-	void write(I begin, I end);
+	size_t write(I begin, I end);
 
 	template <typename I>
 	size_t read(I buffer, size_t len);
+
 	size_t size();
-	size_t reserve(size_t size);
+	size_t resize(size_t newSize);
 	void clear();
+
+	bool full();
+	bool empty();
+	size_t availableSpace();
 
     private:
 	CircularBuffer(const CircularBuffer&);
 
-	size_t resize(size_t newSize);
-
 	template <typename I>
 	size_t copy(I it, size_t len);
-
 
 	T*	_buffer;
 	size_t	_size;

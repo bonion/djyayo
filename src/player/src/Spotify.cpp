@@ -41,6 +41,7 @@ namespace SpDj
 	session_callbacks.logged_in = &Spotify::callback_logged_in;
 	session_callbacks.notify_main_thread = &Spotify::callback_notify_main_thread;
 	session_callbacks.music_delivery = &Spotify::callback_music_delivery;
+	session_callbacks.get_audio_buffer_stats = &Spotify::callback_get_audio_buffer_stats;
 	session_callbacks.metadata_updated = &Spotify::callback_metadata_updated;
 	session_callbacks.play_token_lost = &Spotify::callback_play_token_lost;
 	session_callbacks.log_message = NULL;
@@ -173,9 +174,15 @@ namespace SpDj
 	Spotify* spotify = reinterpret_cast<Spotify*>(sp_session_userdata(s));
 
 	AudioData data(frames, nbFrames, AudioFormat(format->sample_rate, format->channels));
-	spotify->_player.play(data);
-	return nbFrames;
+	return spotify->_player.play(data);
     }
+
+    void Spotify::callback_get_audio_buffer_stats(sp_session* s, sp_audio_buffer_stats* stats) {
+        Spotify* spotify = reinterpret_cast<Spotify*>(sp_session_userdata(s));
+	stats->samples = spotify->_player.bufferSampleCount();
+	stats->stutter = spotify->_player.audioDropoutCount();
+    }
+
 
     void Spotify::callback_play_token_lost(sp_session *) {
 

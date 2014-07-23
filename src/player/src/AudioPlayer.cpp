@@ -20,10 +20,15 @@
 #include "IOService.h"
 #include "AudioPlayer.h"
 
+#include <iostream>
+
 namespace SpDj
 {
-    AudioPlayer::AudioPlayer() {
+    const size_t AudioPlayer::bufferSize = 1000000;
+
+    AudioPlayer::AudioPlayer() : _buffer(bufferSize) {
 	_stream = NULL;
+	_dropout = 0;
 	Pa_Initialize();
     }
 
@@ -31,19 +36,42 @@ namespace SpDj
 	Pa_Terminate();
     }
 
-    void AudioPlayer::play(const AudioData& data) {
+    size_t AudioPlayer::play(const AudioData& data) {
+	size_t frameSize, nbFrames, writed;
+
 	if (_stream == NULL)
 	    initStream(data.format());
 	if (!Pa_IsStreamActive(_stream))
 	    Pa_StartStream(_stream);
+
 	std::lock_guard<std::mutex> lock(_mutex);
-	_buffer.write((Byte*)data.frames(), (Byte*)data.frames() + (data.nbFrames() * data.format().frameSize()));
+
+	frameSize = data.format().frameSize();
+	nbFrames = std::min((size_t)data.nbFrames(), _buffer.availableSpace() / frameSize);
+	writed = _buffer.write((Byte*)data.frames(), (Byte*)data.frames() + (nbFrames * frameSize));
+	return writed / frameSize;
     }
 
     void AudioPlayer::stop()
     {
-	_buffer.clear();
 	Pa_StopStream(_stream);
+	_buffer.clear();
+    }
+
+    int AudioPlayer::bufferSampleCount()
+    {
+        if (_audioFormat.frameSize() == 0)
+	  return 0;
+	std::lock_guard<std::mutex> lock(_mutex);
+        return _buffer.size() / _audioFormat.frameSize();
+    }
+
+    int AudioPlayer::audioDropoutCount()
+    {
+	std::lock_guard<std::mutex> lock(_mutex);
+        int dropout = _dropout;
+	_dropout = 0;
+	return dropout;
     }
 
     void AudioPlayer::initStream(const AudioFormat& format)
@@ -69,10 +97,13 @@ namespace SpDj
 	AudioPlayer* p = static_cast<AudioPlayer*>(obj);
 
 	std::lock_guard<std::mutex> lock(p->_mutex);
+
 	auto size = p->_buffer.read((Byte*)output, frameCount * p->_audioFormat.frameSize());
 	if (p->_buffer.size() == 0)
 	    IOService::addTask([p] {p->emit("empty");});
 	std::fill((char*)output + size, (char*)output + frameCount * p->_audioFormat.frameSize(), 0);
+	if (frameCount != size /  p->_audioFormat.frameSize())
+	    p->_dropout++;
 	return (paContinue);
     }
 

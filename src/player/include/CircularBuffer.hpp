@@ -22,14 +22,17 @@
  * THE SOFTWARE.
  */
 
+#include <iostream>
+
 namespace SpDj
 {
     template <typename T>
-    CircularBuffer<T>::CircularBuffer() {
+    CircularBuffer<T>::CircularBuffer(size_t size) {
 	_buffer = NULL;
 	_read = NULL;
 	_write = NULL;
 	_size = 0;
+	resize(size);
     }
 
     template <typename T>
@@ -39,13 +42,16 @@ namespace SpDj
 
     template <typename T>
     template <typename I>
-    void CircularBuffer<T>::write(I begin, I end) {
-	reserve(size() + (end - begin));
-	while (begin != end) {
+    size_t CircularBuffer<T>::write(I begin, I end) {
+        size_t	writed = 0;
+
+        while (begin != end && full() == false) {
 	    *_write = *(begin++);
 	    if (++_write == _buffer + _size)
 		_write = _buffer;
+	    writed++;
 	}
+	return writed;
     }
 
     template <typename T>
@@ -55,8 +61,6 @@ namespace SpDj
 	_read += l;
 	if (_read >= _buffer + _size)
 	    _read = _buffer + (_read - (_buffer + _size));
-	if (size() < (_size - 1) / 4)
-	    resize(_size / 2 + 1);
 	return l;
     }
 
@@ -87,24 +91,29 @@ namespace SpDj
     }
 
     template <typename T>
-    size_t CircularBuffer<T>::reserve(size_t size) {
-	size_t nsize = 2;
-
-	while (nsize <= size) {
-	    nsize *= 2;
-	}
-	if (nsize >= _size) {
-	    resize(nsize + 1);
-	}
-	return _size;
-    }
-
-    template <typename T>
     void CircularBuffer<T>::clear() {
 	_read = _buffer;
 	_write = _buffer;
     }
 
+
+    template <typename T>
+    bool CircularBuffer<T>::full()
+    {
+      return _size - 1 == size();
+    }
+
+    template <typename T>
+    bool CircularBuffer<T>::empty()
+    {
+      return size() == 0;
+    }
+
+    template <typename T>
+    size_t CircularBuffer<T>::availableSpace()
+    {
+      return _size - 1 - size();
+    }
 
     template <typename T>
     template <typename I>

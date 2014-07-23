@@ -38,13 +38,16 @@ namespace SpDj
     class AudioPlayer : public EventEmitter
     {
 	typedef int8_t Byte;
+        static const size_t bufferSize;
 
     public:
 	AudioPlayer();
 	~AudioPlayer();
 
-	void play(const AudioData&);
+	size_t play(const AudioData&);
 	void stop();
+	int bufferSampleCount();
+	int audioDropoutCount();
 
 	static int streamCallback(const void *,
 				  void *output,
@@ -59,6 +62,7 @@ namespace SpDj
 	std::mutex	_mutex;
 	CircularBuffer<Byte> _buffer;
 	AudioFormat	_audioFormat;
+	int		_dropout;
     };
 }
 #endif
