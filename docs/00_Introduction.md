@@ -8,7 +8,7 @@ This project is composed of three different part.
 This part handle the room and the track system. It provide a REST HTTP API that allow other applications to get information about room players or tracks.
 
 ### Web application ###
-This is the GUI of the project. It's a web application that use the server REST API to access room information and allow user to search and vote music.
+This is the GUI of the project. It's a web application that use the server REST API to access room information and allow user to search and vote songs.
 
 ### Player ###
 The player provide the link between a music provider (i.e. spotify) and the server.
