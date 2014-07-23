@@ -3,7 +3,7 @@
 This endpoint allow you to add an admin to the room.
 
 ### Parameters ###
-* **:roomName** *(required)* : The name of the room you want info about.
+* **:roomName** *(required)* : The name of the room to which you want to add an admin.
 * **userId** *(required)*: The id of the user you want to promote admin in the room.
 
 ### Response ###

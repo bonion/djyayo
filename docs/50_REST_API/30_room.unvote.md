@@ -3,7 +3,7 @@
 This endpoint allow you to unvote for a track in the room
 
 ### Parameters ###
-* **:roomName** *(required)* : The name of the room you want info about.
+* **:roomName** *(required)* : The name of the room where you want to unvote.
 * **uri** *(required)* : The track uri.
 
 ### Response ###

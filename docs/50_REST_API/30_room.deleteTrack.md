@@ -1,9 +1,9 @@
 	/room/:roomName/deleteTrack?uri=TRACKURI
 
-This endpoint allow you to remove track from queue.
+This endpoint allow you to remove tracks from the queue.
 
 ### Parameters ###
-* **:roomName** *(required)* : The name of the room you want info about.
+* **:roomName** *(required)* : The name of the room where you want to remove the track.
 * **uri** *(required)* : The uri of the track you want to remove.
 
 ### Response ###
